@@ -2,6 +2,8 @@ import 'package:calendar_gemini/constants.dart';
 import 'package:dash_chat_2/dash_chat_2.dart';
 import 'package:flutter/material.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
+import 'google_auth_service.dart';
+import 'google_calendar_service.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -83,6 +85,9 @@ class _HomePageState extends State<HomePage> {
       }
     } catch (e) {
       print(e);
-    }
+    }                                                                                                                                       
+    
+
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            
   }
 }
