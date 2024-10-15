@@ -1,35 +1,27 @@
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:flutter_web_auth_2/flutter_web_auth_2.dart';
+import 'package:googleapis_auth/auth_io.dart';
 import 'package:http/http.dart' as http;
-import 'dart:convert';
 
 class GoogleAuthService {
-  final GoogleSignIn _googleSignIn = GoogleSignIn(
-    scopes: [
-      'email',
-      'https://www.googleapis.com/auth/calendar.events',  // Google Calendar scope
-    ],
-  );
+  final List<String> _scopes = ['https://www.googleapis.com/auth/calendar'];
 
-  GoogleSignInAccount? _currentUser;
+  Future<http.Client?> getHttpClient() async {
+    GoogleSignInAccount? account = await GoogleSignIn(scopes: _scopes).signIn();
 
-  Future<GoogleSignInAccount?> signInWithGoogle() async {
-    try {
-      _currentUser = await _googleSignIn.signIn();
-      return _currentUser;
-    } catch (error) {
-      print("Sign-in failed: $error");
-      return null;
+    if (account == null) {
+      return null; // User cancelled the sign-in.
     }
-  }
 
-  Future<void> signOut() async {
-    await _googleSignIn.signOut();
-    _currentUser = null;
-  }
+    GoogleSignInAuthentication auth = await account.authentication;
 
-  Future<String?> getAuthToken() async {
-    final authentication = await _currentUser?.authentication;
-    return authentication?.accessToken;
+    final accessToken = AccessToken('Bearer', auth.accessToken!, DateTime.now().add(Duration(hours: 1)));
+
+    var authClient = authenticatedClient(http.Client(), AccessCredentials(
+      accessToken,
+      auth.idToken,
+      _scopes,
+    ));
+
+    return authClient;
   }
 }

@@ -1,64 +1,41 @@
 import 'package:googleapis/calendar/v3.dart' as calendar;
-import 'package:http/http.dart' as http;
-import 'package:googleapis_auth/googleapis_auth.dart';
 import 'google_auth_service.dart';
 
 class GoogleCalendarService {
   final GoogleAuthService _googleAuthService = GoogleAuthService();
 
-  Future<void> listEvents() async {
-    String? accessToken = await _googleAuthService.getAuthToken();
+  Future<void> addEvent(String eventName, DateTime startDate, DateTime startTime, DateTime endTime) async {
+    var client = await _googleAuthService.getHttpClient();
 
-    if (accessToken != null) {
-      // Create an authenticated client
-      var authClient = authenticatedClient(http.Client(), AccessCredentials(
-        AccessToken('Bearer', accessToken, DateTime.now().add(Duration(hours: 1))),
-        null,  // No refresh token available for now
-        ['https://www.googleapis.com/auth/calendar.events'],
-      ));
-
-      var calendarApi = calendar.CalendarApi(authClient);
-
-      // Retrieve the list of calendar events
-      var events = await calendarApi.events.list('primary');
-
-      print("Upcoming events:");
-      if (events.items != null) {
-        events.items!.forEach((event) {
-          print(event.summary);
-        });
-      }
-    } else {
-      print("Failed to authenticate.");
+    if (client == null) {
+      print("Failed to authenticate");
+      return;
     }
-  }
 
-  Future<void> createEvent(String summary, DateTime startTime, DateTime endTime) async {
-    String? accessToken = await _googleAuthService.getAuthToken();
+    var calendarApi = calendar.CalendarApi(client);
 
-    if (accessToken != null) {
-      // Create an authenticated client
-      var authClient = authenticatedClient(http.Client(), AccessCredentials(
-        AccessToken('Bearer', accessToken, DateTime.now().add(Duration(hours: 1))),
-        null,  // No refresh token available for now
-        ['https://www.googleapis.com/auth/calendar.events'],
-      ));
+    // Create the EventDateTime for start and end
+    var startDateTime = calendar.EventDateTime()
+      ..dateTime = DateTime(
+        startDate.year, startDate.month, startDate.day, startTime.hour, startTime.minute)
+      ..timeZone = "GMT";  // Use correct timezone if needed
 
-      var calendarApi = calendar.CalendarApi(authClient);
+    var endDateTime = calendar.EventDateTime()
+      ..dateTime = endTime
+      ..timeZone = "GMT";
 
-      var event = calendar.Event()
-        ..summary = summary
-        ..start = (calendar.EventDateTime()
-          ..dateTime = startTime
-          ..timeZone = "GMT")
-        ..end = (calendar.EventDateTime()
-          ..dateTime = endTime
-          ..timeZone = "GMT");
+    // Define the event
+    var event = calendar.Event()
+      ..summary = eventName
+      ..start = startDateTime
+      ..end = endDateTime;
 
+    try {
+      // Insert event into primary calendar
       var createdEvent = await calendarApi.events.insert(event, 'primary');
       print("Event created: ${createdEvent.htmlLink}");
-    } else {
-      print("Failed to authenticate.");
+    } catch (e) {
+      print("Error creating event: $e");
     }
   }
 }
