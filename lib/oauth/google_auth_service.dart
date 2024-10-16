@@ -1,27 +1,62 @@
+import 'package:calendar_gemini/constants.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:googleapis_auth/auth_io.dart';
 import 'package:http/http.dart' as http;
+import 'package:googleapis_auth/auth_io.dart';
 
 class GoogleAuthService {
-  final List<String> _scopes = ['https://www.googleapis.com/auth/calendar'];
+  final GoogleSignIn _googleSignIn = GoogleSignIn(
+    scopes: ['https://www.googleapis.com/auth/calendar'],
+    clientId: client_Id
+  );
+
+  GoogleSignInAccount? _currentUser;
+
+  Future<bool> signInWithGoogle() async {
+    try {
+      _currentUser = await _googleSignIn.signIn();
+      return _currentUser != null;
+    } catch (error) {
+      print("Sign-in error: $error");
+      return false;
+    }
+  }
 
   Future<http.Client?> getHttpClient() async {
-    GoogleSignInAccount? account = await GoogleSignIn(scopes: _scopes).signIn();
-
-    if (account == null) {
-      return null; // User cancelled the sign-in.
+      if (_currentUser == null) {
+      print("User not signed in");
+      bool signedIn = await signInWithGoogle();
+      if (!signedIn) {
+        print("User sign-in failed");
+        return null;  // Sign-in failed
+      }
     }
 
-    GoogleSignInAuthentication auth = await account.authentication;
+    try {
+      GoogleSignInAuthentication auth = await _currentUser!.authentication;
 
-    final accessToken = AccessToken('Bearer', auth.accessToken!, DateTime.now().add(Duration(hours: 1)));
+      print("Access Token: ${auth.accessToken}");
+      print("ID Token: ${auth.idToken}");
 
-    var authClient = authenticatedClient(http.Client(), AccessCredentials(
-      accessToken,
-      auth.idToken,
-      _scopes,
-    ));
+      var client = authenticatedClient(
+        http.Client(),
+        AccessCredentials(
+          AccessToken(
+            'Bearer',
+            auth.accessToken!,
+            DateTime.now().toUtc().add(Duration(hours: 1)), 
+          ),
+          auth.idToken,
+          ['https://www.googleapis.com/auth/calendar'],
+        ),
+      );
+      return client;
+    } catch (e) {
+      print("Failed to get authenticated client: $e");
+      return null;
+    }
+  }
 
-    return authClient;
+  Future<void> signOut() async {
+    await _googleSignIn.signOut();
   }
 }

@@ -79,33 +79,35 @@ class _HomePageState extends State<HomePage> {
           // print(eventData);
           String userIntent = eventData['User_Intent'] ?? 'Undefined';
           String eventDate = eventData['Date'] ?? 'Undefined';
-          String startTime = eventData['Start_Time'] ?? 'Undefined';
-          String endTime = eventData['End_Time'] ?? 'Undefined';
+          String startTimeStr = eventData['Start_Time'] ?? 'Undefined';
+          String endTimeStr = eventData['End_Time'] ?? 'Undefined';
           String eventName = eventData['Event_name'] ?? 'Undefined';
 
           print("User Intent: $userIntent");
           print("Event Date: $eventDate");
-          print("Event Start Time: $startTime");
-          print("Event End Time: $endTime");
+          print("Event Start Time: $startTimeStr");
+          print("Event End Time: $endTimeStr");
           print("Event Name: $eventName");
+
+          // Parse date and time into DateTime objects
+          DateTime startDate = DateTime.parse(eventDate);
+          DateTime startTime = DateTime.parse("$eventDate $startTimeStr");
+          DateTime endTime = endTimeStr != 'Undefined'
+              ? DateTime.parse("$eventDate $endTimeStr")
+              : startTime.add(Duration(hours: 1)); // Set default 1-hour duration if end time is not provided.
 
           try {
             if (userIntent == "Add_Event") {
-            // Parse date and time strings into DateTime objects
-            DateTime startDate = DateTime.parse("2024-10-16"); // Replace with parsed date
-            DateTime startTime = DateTime.parse("2024-10-16 17:00"); // Replace with parsed time
-            DateTime endTime = startTime.add(Duration(hours: 1)); // Set event to 1 hour
-
-            // Call Google Calendar API to add event
-            await googleCalendarService.addEvent(eventName, startDate, startTime, endTime);
-          }
+              await googleCalendarService.addEvent(eventName, startDate, startTime, endTime);
+            }
           } catch (e) {
             print("Failed to add Event to calendar: $e");
           }
+          
           ChatMessage newMessage = ChatMessage(
             user: geminiUser,
             createdAt: DateTime.now(),
-            text: "Intent: $userIntent, Date: $eventDate, Start Time: $startTime, End Time: $endTime, Event: $eventName",
+            text: "Event added successfully on your Calendar \n Date: $eventDate, Start Time: $startTime, End Time: $endTime, Event: $eventName",
           );
           setState(() {
             messages = [newMessage, ...messages];
