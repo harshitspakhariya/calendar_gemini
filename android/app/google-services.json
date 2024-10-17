@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "19268149191",
+    "project_id": "gemini-calendar-scheduler",
+    "storage_bucket": "gemini-calendar-scheduler.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:19268149191:android:3d69a7ee4a26277e1b03e2",
+        "android_client_info": {
+          "package_name": "com.example.calendar_gemini"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "19268149191-so1q60fofnmi5m046iblkhpi893s6il1.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAMZrvp1QGK3A5KZnqqe4nzkcqb1C-RjlM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "19268149191-so1q60fofnmi5m046iblkhpi893s6il1.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
