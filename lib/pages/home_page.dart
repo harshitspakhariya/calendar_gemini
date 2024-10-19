@@ -81,7 +81,7 @@ class _HomePageState extends State<HomePage> {
         // Create content for the prompt
         final content = [Content.text(prompt)];
         final response = await model!.generateContent(content);
-        String responseText = response.text ?? 'Please ask a proper query!';
+        String responseText = response.text ?? 'Please ask a proper query';
         
         try {
           responseText = responseText.replaceAll(RegExp(r'```json|```|\njson'), '').trim();
