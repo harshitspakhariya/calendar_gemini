@@ -41,4 +41,32 @@ class GoogleCalendarService {
       print("Error creating event: $e");
     }
   }
+  Future<void> shiftEvent(String eventName, DateTime newDate, DateTime newStartTime, DateTime newEndTime) async {
+    http.Client? client = await _googleAuthService.getHttpClient();
+    if (client == null) {
+      print("Failed to authenticate");
+      return;
+    }
+
+    var calendarApi = calendar.CalendarApi(client);
+    try {
+      // Search for existing event by event name
+      var events = await calendarApi.events.list('primary', q: eventName);
+      if (events.items != null && events.items!.isNotEmpty) {
+        var event = events.items!.first;
+
+        // Update event start and end times
+        event.start = calendar.EventDateTime(dateTime: newStartTime, timeZone: "GMT");
+        event.end = calendar.EventDateTime(dateTime: newEndTime, timeZone: "GMT");
+
+        // Update event in Google Calendar
+        await calendarApi.events.update(event, 'primary', event.id!);
+        print("Event shifted successfully: ${event.htmlLink}");
+      } else {
+        print("No event found with name: $eventName");
+      }
+    } catch (e) {
+      print("Error shifting event: $e");
+    }
+  }
 }
