@@ -76,7 +76,7 @@ class _HomePageState extends State<HomePage> {
       DateTime current = DateTime.now();
       String currentDate = DateFormat('yyyy-MM-dd').format(current);
 
-      String fields = """ Fields required for Add_Event are:
+      String fields = """   Fields required for Add_Event are:
                             {
                               "User_Intent": "Add_Event",
                               "Event_name": "",          // Use a valid event name with all letters in small case.
@@ -94,6 +94,8 @@ class _HomePageState extends State<HomePage> {
                               "End_Time": "HH:MM"        // Optional.
                             }
 
+                            For Cancel_Event if you are not able to extract any 
+                            date then by default take the date as null.
                             Fields required for Cancel_Event are:
                             {
                               "User_Intent": "Cancel_Event",
@@ -148,19 +150,18 @@ class _HomePageState extends State<HomePage> {
           print("Event End Time: $endTimeStr");
           print("Event Name: $eventName");
 
-          // Parse date and time into DateTime objects
-          DateTime startDate = DateTime.parse(eventDate);
-          DateTime startTime = DateTime.parse("$eventDate $startTimeStr");
-          DateTime endTime = endTimeStr != 'null'
-              ? DateTime.parse("$eventDate $endTimeStr")
-              : startTime.add(Duration(
-                  hours:
-                      1)); // Set default 1-hour duration if end time is not provided.
-
           String preMessage = "";
 
           try {
             if (userIntent == "Add_Event") {
+              DateTime startDate = DateTime.parse(eventDate);
+              DateTime startTime = DateTime.parse("$eventDate $startTimeStr");
+              DateTime endTime = endTimeStr != 'null'
+                  ? DateTime.parse("$eventDate $endTimeStr")
+                  : startTime.add(Duration(
+                      hours:
+                          1));
+
               await googleCalendarService.addEvent(
                   eventName, startDate, startTime, endTime);
               preMessage = "Event added successfully on your Calendar \n";
@@ -171,6 +172,14 @@ class _HomePageState extends State<HomePage> {
 
           try {
             if (userIntent == "Shift_Event") {
+              DateTime startDate = DateTime.parse(eventDate);
+              DateTime startTime = DateTime.parse("$eventDate $startTimeStr");
+              DateTime endTime = endTimeStr != 'null'
+                  ? DateTime.parse("$eventDate $endTimeStr")
+                  : startTime.add(Duration(
+                      hours:
+                          1));
+
               await googleCalendarService.shiftEvent(
                   eventName, startDate, startTime, endTime);
               preMessage = "Event shifted successfully on your Calendar \n";
@@ -179,11 +188,20 @@ class _HomePageState extends State<HomePage> {
             print("Failed to shift Event to calendar: $e");
           }
 
+          try {
+            if (userIntent == "Cancel_Event") {
+              await googleCalendarService.cancelEvent(
+                  eventName, eventDate);
+              preMessage = "Event removed successfully from your Calendar \n";
+            }
+          } catch (e) {
+            print("Failed to cancel Event on your calendar: $e");
+          }
           ChatMessage newMessage = ChatMessage(
             user: geminiUser,
             createdAt: DateTime.now(),
             text: botReply +
-                " \n Details:- \n $preMessage Date: $eventDate, Start Time: $startTime, End Time: $endTime, Event: $eventName",
+                " \n Details:- \n $preMessage Date: $eventDate, Event: $eventName",
           );
           setState(() {
             messages = [newMessage, ...messages];
