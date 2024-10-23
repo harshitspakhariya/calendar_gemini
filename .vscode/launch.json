@@ -7,13 +7,16 @@
         {
             "name": "calendar_gemini",
             "request": "launch",
-            "type": "dart"
+            "type": "dart",
+            "args": ["--web-port","8080"]
+
         },
         {
             "name": "calendar_gemini (profile mode)",
             "request": "launch",
             "type": "dart",
-            "flutterMode": "profile"
+            "flutterMode": "profile",
+            "args": ["--web-port","8080"]
         },
         {
             "name": "calendar_gemini (release mode)",

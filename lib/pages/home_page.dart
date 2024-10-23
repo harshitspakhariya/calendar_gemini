@@ -54,9 +54,10 @@ class _HomePageState extends State<HomePage> {
     }
 
     try {
-      String context = """ Suppose you are a Google Calendar Scheduler app, and 
-                            your task is to classify the user's intent and provide 
-                            the relevant event details in JSON format. 
+      String context =
+          """  Suppose you are a Google Calendar Scheduler app, and 
+                            your task is to classify the user's intent and  
+                            provide the relevant event details in JSON format. 
                             Only return the JSON response without extra sentences.
                             Default the year and time fields to the latest logical
                             values if they are missing (e.g., if no year is provided,
@@ -78,8 +79,8 @@ class _HomePageState extends State<HomePage> {
       String fields = """ Fields required for Add_Event are:
                             {
                               "User_Intent": "Add_Event",
-                              "Event_name": "",          // Use a valid event name.
-                              "Date": "2024-MM-DD",      // Use format YYYY-MM-DD.
+                              "Event_name": "",          // Use a valid event name with all letters in small case.
+                              "Date": "YYYY-MM-DD",      // Use format YYYY-MM-DD.
                               "Start_Time": "HH:MM",     // 24-hour format (HH:MM).
                               "End_Time": "HH:MM"        // Optional.
                             }
@@ -87,8 +88,17 @@ class _HomePageState extends State<HomePage> {
                             Fields required for Shift_Event are:
                             {
                               "User_Intent": "Shift_Event",
-                              "Event_name": "",          // Use a valid event name.
-                              "Date": "2024-MM-DD",      // Use format YYYY-MM-DD.
+                              "Event_name": "",          // Use a valid event name with all letters in small case.
+                              "Date": "YYYY-MM-DD",      // Use format YYYY-MM-DD.
+                              "Start_Time": "HH:MM",     // 24-hour format (HH:MM).
+                              "End_Time": "HH:MM"        // Optional.
+                            }
+
+                            Fields required for Cancel_Event are:
+                            {
+                              "User_Intent": "Cancel_Event",
+                              "Event_name": "",          // Use a valid event name with all letters in small case.
+                              "Date": "YYYY-MM-DD",      // Use format YYYY-MM-DD.
                               "Start_Time": "HH:MM",     // 24-hour format (HH:MM).
                               "End_Time": "HH:MM"        // Optional.
                             }
@@ -97,7 +107,7 @@ class _HomePageState extends State<HomePage> {
                             correctly based on the current date which is $currentDate. 
                             If only the day and month are provided,
                             assume the latest possible future date. 
-                            Do not use dates in the past unless explicitly requested.
+                            Do not use dates in the past.
                             Return the data in this format for the following user query: """;
 
       // String ending =
