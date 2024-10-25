@@ -104,9 +104,20 @@ class _HomePageState extends State<HomePage> {
                               "Start_Time": "HH:MM",     // 24-hour format (HH:MM).
                               "End_Time": "HH:MM"        // Optional.
                             }
+                              
+                            Fields required for Add_Recurring_Event are:
+                            {
+                              "User_Intent": "Add_Recurring_Event",
+                              "Event_name": "",          // Use a valid event name with all letters in small case.
+                              "Date": "YYYY-MM-DD",      // Use format YYYY-MM-DD.
+                              "Start_Time": "HH:MM",     // 24-hour format (HH:MM).
+                              "Recurrence_Frequency": "" // Use only daily, weekly, monthly, annually
+                              "End_Time": "HH:MM"        // Optional. 
+                            }
 
-                            You must interpret relative dates (e.g., "today," "tomorrow," "next week")
+                            You must interpret relative dates (e.g., "today", "tomorrow", "next week")
                             correctly based on the current date which is $currentDate. 
+                            You must interpret the repeated time terms(e.g., "daily","weekly","monthly","annual")
                             If only the day and month are provided,
                             assume the latest possible future date. 
                             Do not use dates in the past.
@@ -139,6 +150,7 @@ class _HomePageState extends State<HomePage> {
           String startTimeStr = eventData['Start_Time'] ?? 'null';
           String endTimeStr = eventData['End_Time'] ?? 'null';
           String eventName = eventData['Event_name'] ?? 'null';
+          String recurrenceFreq = eventData['Recurrence_Frequency'] ?? 'null';
 
           if (eventName == 'null') {
             eventName = 'No_Title';
@@ -149,6 +161,7 @@ class _HomePageState extends State<HomePage> {
           print("Event Start Time: $startTimeStr");
           print("Event End Time: $endTimeStr");
           print("Event Name: $eventName");
+          print("Recurrence Frequency: $recurrenceFreq");
 
           String preMessage = "";
 
@@ -158,9 +171,7 @@ class _HomePageState extends State<HomePage> {
               DateTime startTime = DateTime.parse("$eventDate $startTimeStr");
               DateTime endTime = endTimeStr != 'null'
                   ? DateTime.parse("$eventDate $endTimeStr")
-                  : startTime.add(Duration(
-                      hours:
-                          1));
+                  : startTime.add(Duration(hours: 1));
 
               await googleCalendarService.addEvent(
                   eventName, startDate, startTime, endTime);
@@ -176,9 +187,7 @@ class _HomePageState extends State<HomePage> {
               DateTime startTime = DateTime.parse("$eventDate $startTimeStr");
               DateTime endTime = endTimeStr != 'null'
                   ? DateTime.parse("$eventDate $endTimeStr")
-                  : startTime.add(Duration(
-                      hours:
-                          1));
+                  : startTime.add(Duration(hours: 1));
 
               await googleCalendarService.shiftEvent(
                   eventName, startDate, startTime, endTime);
@@ -190,13 +199,42 @@ class _HomePageState extends State<HomePage> {
 
           try {
             if (userIntent == "Cancel_Event") {
-              await googleCalendarService.cancelEvent(
-                  eventName, eventDate);
+              await googleCalendarService.cancelEvent(eventName, eventDate);
               preMessage = "Event removed successfully from your Calendar \n";
             }
           } catch (e) {
             print("Failed to cancel Event on your calendar: $e");
           }
+
+          try {
+            if (userIntent == "Add_Recurring_Event") {
+              DateTime startDate = DateTime.parse(eventDate);
+              DateTime startTime = DateTime.parse("$eventDate $startTimeStr");
+              DateTime endTime = endTimeStr != 'null'
+                  ? DateTime.parse("$eventDate $endTimeStr")
+                  : startTime.add(Duration(hours: 1));    
+              String rrule="";
+
+              
+              if (recurrenceFreq.toLowerCase() == "daily")
+                rrule = "RRULE:FREQ=DAILY";
+              else if (recurrenceFreq.toLowerCase() == "monthly")
+                rrule = "RRULE:FREQ=MONTHLY";
+              else if (recurrenceFreq.toLowerCase() == "weekly")
+                rrule = "RRULE:FREQ=WEEKLY";
+              else if (recurrenceFreq.toLowerCase() == "yearly")
+                rrule = "RRULE:FREQ=YEARLY";
+
+              await googleCalendarService.addRecurringEvent(
+                eventName, startDate, startTime, endTime, rrule
+              );
+              preMessage = "Recurring Event added successfully to your Calendar\n";
+              print("Recurring Event added successfully on your calendar\n");
+            }
+          } catch (e) {
+            print("Failed to add recurring Event on your calendar: $e");
+          }
+
           ChatMessage newMessage = ChatMessage(
             user: geminiUser,
             createdAt: DateTime.now(),
