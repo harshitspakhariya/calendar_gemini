@@ -117,7 +117,7 @@ class GoogleCalendarService {
 
   Future<void> addRecurringEvent(String eventName, DateTime startDate,
       DateTime startTime, DateTime endTime, String rrule) async {
-      http.Client? client = await _googleAuthService.getHttpClient();
+    http.Client? client = await _googleAuthService.getHttpClient();
     if (client == null) {
       print("Failed to authenticate");
       return;
@@ -129,9 +129,9 @@ class GoogleCalendarService {
     var eventStart = DateTime(startDate.year, startDate.month, startDate.day,
         startTime.hour, startTime.minute);
     var eventEnd = eventStart.add(Duration(hours: 1));
-    if(endTime != null)
-    eventEnd = DateTime(startDate.year, startDate.month, startDate.day,
-        endTime.hour, endTime.minute);
+    if (endTime != null)
+      eventEnd = DateTime(startDate.year, startDate.month, startDate.day,
+          endTime.hour, endTime.minute);
 
     var event = calendar.Event()
       ..summary = eventName
@@ -143,7 +143,38 @@ class GoogleCalendarService {
         dateTime: eventEnd,
         timeZone: "IST",
       )
-      ..recurrence= [rrule];
+      ..recurrence = [rrule];
+
+    try {
+      var createdEvent = await calendarApi.events.insert(event, 'primary');
+      print("Event created: ${createdEvent.htmlLink}");
+    } catch (e) {
+      print("Error creating event: $e");
+    }
+  }
+
+  Future<void> allDayEvent(
+      String eventName, DateTime startDate, DateTime endDate) async {
+    http.Client? client = await _googleAuthService.getHttpClient();
+    if (client == null) {
+      print("Failed to authenticate");
+      return;
+    }
+
+    var calendarApi = calendar.CalendarApi(client);
+    print("Start Date: $startDate");
+    print("End Date: $endDate");
+    final event = calendar.Event(
+      summary: eventName,
+      start: calendar.EventDateTime(
+        date: startDate,
+        timeZone: 'IST',
+      ),
+      end: calendar.EventDateTime(
+        date: endDate,
+        timeZone: 'IST',
+      ),
+    );
 
     try {
       var createdEvent = await calendarApi.events.insert(event, 'primary');

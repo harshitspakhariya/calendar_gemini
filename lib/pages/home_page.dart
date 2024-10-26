@@ -70,8 +70,9 @@ class _HomePageState extends State<HomePage> {
                             For each intent, return the required fields in the correct JSON format:
                             - If the user doesn't specify a year, assume it's the current year 
                             unless the date has passed, then assume it's the next year.
-                            - If no time is provided, default the time to 00:00 
-                            for all-day events.""";
+                            - If you are given more than 1 date 
+                            then it should be classified as a All day event
+                            """;
 
       DateTime current = DateTime.now();
       String currentDate = DateFormat('yyyy-MM-dd').format(current);
@@ -115,6 +116,14 @@ class _HomePageState extends State<HomePage> {
                               "End_Time": "HH:MM"        // Optional. 
                             }
 
+                            Fields required for AllDay_Event are:
+                            {
+                              "User_Intent": "Add_Recurring_Event",
+                              "Event_name": "",          // Use a valid event name with all letters in small case.
+                              "Date": "YYYY-MM-DD",      // This is start Date.Use format YYYY-MM-DD.
+                              "End_Date": "YYYY-MM-DD",  // Use format YYYY-MM-DD.
+                            }
+
                             You must interpret relative dates (e.g., "today", "tomorrow", "next week")
                             correctly based on the current date which is $currentDate. 
                             You must interpret the repeated time terms(e.g., "daily","weekly","monthly","annual")
@@ -147,6 +156,7 @@ class _HomePageState extends State<HomePage> {
           // print(eventData);
           String userIntent = eventData['User_Intent'] ?? 'null';
           String eventDate = eventData['Date'] ?? 'null';
+          String eventEndDate = eventData['End_Date'] ?? 'null';
           String startTimeStr = eventData['Start_Time'] ?? 'null';
           String endTimeStr = eventData['End_Time'] ?? 'null';
           String eventName = eventData['Event_name'] ?? 'null';
@@ -158,6 +168,7 @@ class _HomePageState extends State<HomePage> {
 
           print("User Intent: $userIntent");
           print("Event Date: $eventDate");
+          print("Event End Date: $eventEndDate");
           print("Event Start Time: $startTimeStr");
           print("Event End Time: $endTimeStr");
           print("Event Name: $eventName");
@@ -233,6 +244,20 @@ class _HomePageState extends State<HomePage> {
             }
           } catch (e) {
             print("Failed to add recurring Event on your calendar: $e");
+          }
+
+          try {
+            if (userIntent == "AllDay_Event") {
+              DateTime startDate = DateTime.parse(eventDate);
+              DateTime endDate = eventEndDate != 'null'
+                  ? DateTime.parse("$eventEndDate").add(Duration(days: 1))
+                  : startDate.add(Duration(days: 1));    
+
+              await googleCalendarService.allDayEvent(eventName, startDate, endDate);
+              preMessage = "All Day Event added successfully on your Calendar\n";
+            }
+          } catch (e) {
+            print("Failed to add All Day Event on your calendar: $e");
           }
 
           ChatMessage newMessage = ChatMessage(
