@@ -56,6 +56,10 @@ class GoogleAuthService {
     }
   }
 
+  String? getProfileImage() {
+    return _currentUser?.photoUrl;
+  }
+  
   Future<void> signOut() async {
     await _googleSignIn.signOut();
   }

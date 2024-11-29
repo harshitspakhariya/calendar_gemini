@@ -1,6 +1,9 @@
+import 'dart:io';
 import 'package:calendar_gemini/constants.dart';
+import 'package:calendar_gemini/oauth/google_auth_service.dart';
 import 'package:dash_chat_2/dash_chat_2.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
 import '../oauth/google_calendar_service.dart';
 import 'package:intl/intl.dart';
@@ -16,10 +19,11 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   String apiKey = gemini_api_key;
   List<ChatMessage> messages = [];
-  ChatUser currentUser = ChatUser(id: "0", firstName: "User");
-  ChatUser geminiUser = ChatUser(id: "1", firstName: "Gemini");
   GenerativeModel? model;
   GoogleCalendarService googleCalendarService = GoogleCalendarService();
+  ChatUser currentUser = ChatUser(id: "0", firstName: "User");
+  ChatUser geminiUser = ChatUser(id: "1", firstName: "Gemini");
+  TextEditingController messagesController = TextEditingController();
 
   @override
   void initState() {
@@ -29,18 +33,47 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        centerTitle: true,
-        title: const Text("Gemini Calendar"),
-      ),
-      body: _buildUI(),
-    );
+    return Scaffold(backgroundColor: Colors.black, body: _buildUI());
   }
 
   Widget _buildUI() {
     return DashChat(
-        currentUser: currentUser, onSend: _sendMessage, messages: messages);
+      currentUser: currentUser,
+      onSend: _sendMessage,
+      messages: messages,
+      messageOptions: MessageOptions(
+        currentUserContainerColor: Color.fromARGB(255, 41, 42, 44),
+        currentUserTextColor: Colors.white,
+        textColor: Colors.white,
+        containerColor: Color.fromARGB(20, 50, 149, 220),
+        showCurrentUserAvatar: false,
+        showTime: false,
+        borderRadius: 24,
+      ),
+      inputOptions: InputOptions(
+        inputTextStyle: TextStyle(color: Colors.white, fontFamily: 'Open Sans'),
+        inputDecoration: InputDecoration(
+          hintText: "Enter your prompt here...",
+          hintStyle: TextStyle(color: Color.fromARGB(255, 57, 59, 58)),
+          filled: true,
+          fillColor: Color.fromARGB(255, 19, 19, 19),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(24),
+            borderSide: BorderSide.none,
+          ),
+          contentPadding: EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+        ),
+        sendButtonBuilder: (void Function()? onSend) {
+        return IconButton(
+          onPressed: onSend,
+          icon: Icon(
+            Icons.send,
+            color: Color.fromARGB(255, 197, 199, 197), // Make the send button white.
+            ),
+          );
+        },
+      ),
+    );
   }
 
   void _sendMessage(ChatMessage chatMessage) async {
@@ -56,81 +89,81 @@ class _HomePageState extends State<HomePage> {
     try {
       String context =
           """  Suppose you are a Google Calendar Scheduler app, and 
-                            your task is to classify the user's intent and  
-                            provide the relevant event details in JSON format. 
-                            Only return the JSON response without extra sentences.
-                            Default the year and time fields to the latest logical
-                            values if they are missing (e.g., if no year is provided,
-                            use the current year unless the date has already passed,
-                            in which case use the next year).
-                            Here are the Event_Intents you need to classify: 
-                            { Add_Event, Shift_Event, Cancel_Event, Add_Recurring_Event,
-                             AllDay_Event, Add_Notification }
+                              your task is to classify the user's intent and  
+                              provide the relevant event details in JSON format. 
+                              Only return the JSON response without extra sentences.
+                              Default the year and time fields to the latest logical
+                              values if they are missing (e.g., if no year is provided,
+                              use the current year unless the date has already passed,
+                              in which case use the next year).
+                              Here are the Event_Intents you need to classify: 
+                              { Add_Event, Shift_Event, Cancel_Event, Add_Recurring_Event,
+                              AllDay_Event, Add_Notification }
 
-                            For each intent, return the required fields in the correct JSON format:
-                            - If the user doesn't specify a year, assume it's the current year 
-                            unless the date has passed, then assume it's the next year.
-                            - If you are given more than 1 date 
-                            then it should be classified as a All day event
-                            """;
+                              For each intent, return the required fields in the correct JSON format:
+                              - If the user doesn't specify a year, assume it's the current year 
+                              unless the date has passed, then assume it's the next year.
+                              - If you are given more than 1 date 
+                              then it should be classified as a All day event
+                              """;
 
       DateTime current = DateTime.now();
       String currentDate = DateFormat('yyyy-MM-dd').format(current);
 
       String fields = """   Fields required for Add_Event are:
-                            {
-                              "User_Intent": "Add_Event",
-                              "Event_name": "",          // Use a valid event name with all letters in small case.
-                              "Date": "YYYY-MM-DD",      // Use format YYYY-MM-DD.
-                              "Start_Time": "HH:MM",     // 24-hour format (HH:MM).
-                              "End_Time": "HH:MM"        // Optional.
-                            }
+                              {
+                                "User_Intent": "Add_Event",
+                                "Event_name": "",          // Use a valid event name with all letters in small case.
+                                "Date": "YYYY-MM-DD",      // Use format YYYY-MM-DD.
+                                "Start_Time": "HH:MM",     // 24-hour format (HH:MM).
+                                "End_Time": "HH:MM"        // Optional.
+                              }
 
-                            Fields required for Shift_Event are:
-                            {
-                              "User_Intent": "Shift_Event",
-                              "Event_name": "",          // Use a valid event name with all letters in small case.
-                              "Date": "YYYY-MM-DD",      // Use format YYYY-MM-DD.
-                              "Start_Time": "HH:MM",     // 24-hour format (HH:MM).
-                              "End_Time": "HH:MM"        // Optional.
-                            }
+                              Fields required for Shift_Event are:
+                              {
+                                "User_Intent": "Shift_Event",
+                                "Event_name": "",          // Use a valid event name with all letters in small case.
+                                "Date": "YYYY-MM-DD",      // Use format YYYY-MM-DD.
+                                "Start_Time": "HH:MM",     // 24-hour format (HH:MM).
+                                "End_Time": "HH:MM"        // Optional.
+                              }
 
-                            For Cancel_Event if you are not able to extract any 
-                            date then by default take the date as null.
-                            Fields required for Cancel_Event are:
-                            {
-                              "User_Intent": "Cancel_Event",
-                              "Event_name": "",          // Use a valid event name with all letters in small case.
-                              "Date": "YYYY-MM-DD",      // Use format YYYY-MM-DD.
-                              "Start_Time": "HH:MM",     // 24-hour format (HH:MM).
-                              "End_Time": "HH:MM"        // Optional.
-                            }
-                              
-                            Fields required for Add_Recurring_Event are:
-                            {
-                              "User_Intent": "Add_Recurring_Event",
-                              "Event_name": "",          // Use a valid event name with all letters in small case.
-                              "Date": "YYYY-MM-DD",      // Use format YYYY-MM-DD.
-                              "Start_Time": "HH:MM",     // 24-hour format (HH:MM).
-                              "Recurrence_Frequency": "" // Use only daily, weekly, monthly, annually
-                              "End_Time": "HH:MM"        // Optional. 
-                            }
+                              For Cancel_Event if you are not able to extract any 
+                              date then by default take the date as null.
+                              Fields required for Cancel_Event are:
+                              {
+                                "User_Intent": "Cancel_Event",
+                                "Event_name": "",          // Use a valid event name with all letters in small case.
+                                "Date": "YYYY-MM-DD",      // Use format YYYY-MM-DD.
+                                "Start_Time": "HH:MM",     // 24-hour format (HH:MM).
+                                "End_Time": "HH:MM"        // Optional.
+                              }
+                                
+                              Fields required for Add_Recurring_Event are:
+                              {
+                                "User_Intent": "Add_Recurring_Event",
+                                "Event_name": "",          // Use a valid event name with all letters in small case.
+                                "Date": "YYYY-MM-DD",      // Use format YYYY-MM-DD.
+                                "Start_Time": "HH:MM",     // 24-hour format (HH:MM).
+                                "Recurrence_Frequency": "" // Use only daily, weekly, monthly, annually
+                                "End_Time": "HH:MM"        // Optional. 
+                              }
 
-                            Fields required for AllDay_Event are:
-                            {
-                              "User_Intent": "Add_Recurring_Event",
-                              "Event_name": "",          // Use a valid event name with all letters in small case.
-                              "Date": "YYYY-MM-DD",      // This is start Date.Use format YYYY-MM-DD.
-                              "End_Date": "YYYY-MM-DD",  // Use format YYYY-MM-DD.
-                            }
+                              Fields required for AllDay_Event are:
+                              {
+                                "User_Intent": "Add_Recurring_Event",
+                                "Event_name": "",          // Use a valid event name with all letters in small case.
+                                "Date": "YYYY-MM-DD",      // This is start Date.Use format YYYY-MM-DD.
+                                "End_Date": "YYYY-MM-DD",  // Use format YYYY-MM-DD.
+                              }
 
-                            You must interpret relative dates (e.g., "today", "tomorrow", "next week")
-                            correctly based on the current date which is $currentDate. 
-                            You must interpret the repeated time terms(e.g., "daily","weekly","monthly","annual")
-                            If only the day and month are provided,
-                            assume the latest possible future date. 
-                            Do not use dates in the past.
-                            Return the data in this format for the following user query: """;
+                              You must interpret relative dates (e.g., "today", "tomorrow", "next week")
+                              correctly based on the current date which is $currentDate. 
+                              You must interpret the repeated time terms(e.g., "daily","weekly","monthly","annual")
+                              If only the day and month are provided,
+                              assume the latest possible future date. 
+                              Do not use dates in the past.
+                              Return the data in this format for the following user query: """;
 
       // String ending =
       //     "\n Besides this also act like a normal Gemini Chatbot application";
@@ -223,10 +256,9 @@ class _HomePageState extends State<HomePage> {
               DateTime startTime = DateTime.parse("$eventDate $startTimeStr");
               DateTime endTime = endTimeStr != 'null'
                   ? DateTime.parse("$eventDate $endTimeStr")
-                  : startTime.add(Duration(hours: 1));    
-              String rrule="";
+                  : startTime.add(Duration(hours: 1));
+              String rrule = "";
 
-              
               if (recurrenceFreq.toLowerCase() == "daily")
                 rrule = "RRULE:FREQ=DAILY";
               else if (recurrenceFreq.toLowerCase() == "monthly")
@@ -237,9 +269,9 @@ class _HomePageState extends State<HomePage> {
                 rrule = "RRULE:FREQ=YEARLY";
 
               await googleCalendarService.addRecurringEvent(
-                eventName, startDate, startTime, endTime, rrule
-              );
-              preMessage = "Recurring Event added successfully to your Calendar\n";
+                  eventName, startDate, startTime, endTime, rrule);
+              preMessage =
+                  "Recurring Event added successfully to your Calendar\n";
               print("Recurring Event added successfully on your calendar\n");
             }
           } catch (e) {
@@ -251,10 +283,12 @@ class _HomePageState extends State<HomePage> {
               DateTime startDate = DateTime.parse(eventDate);
               DateTime endDate = eventEndDate != 'null'
                   ? DateTime.parse("$eventEndDate").add(Duration(days: 1))
-                  : startDate.add(Duration(days: 1));    
+                  : startDate.add(Duration(days: 1));
 
-              await googleCalendarService.allDayEvent(eventName, startDate, endDate);
-              preMessage = "All Day Event added successfully on your Calendar\n";
+              await googleCalendarService.allDayEvent(
+                  eventName, startDate, endDate);
+              preMessage =
+                  "All Day Event added successfully on your Calendar\n";
             }
           } catch (e) {
             print("Failed to add All Day Event on your calendar: $e");

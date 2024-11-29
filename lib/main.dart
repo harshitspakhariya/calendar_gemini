@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'pages/home_page.dart'; // Your existing HomePage
+import 'package:google_fonts/google_fonts.dart';
+import 'pages/home_page.dart';
 
 void main() {
   runApp(MyApp());
@@ -9,11 +10,9 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Gemini Calendar Scheduler',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
-      home: HomePage(), // Start with the login screen
-    );
+        theme: ThemeData(
+            textTheme: GoogleFonts.openSansTextTheme(
+                Theme.of(context).textTheme.apply(fontFamily: "Open Sans"))),
+        home: HomePage());
   }
 }

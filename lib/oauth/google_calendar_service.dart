@@ -4,7 +4,6 @@ import 'package:http/http.dart' as http;
 
 class GoogleCalendarService {
   final GoogleAuthService _googleAuthService = GoogleAuthService();
-
   // Updated method to accept eventName, startDate, startTime, and endTime
   Future<void> addEvent(String eventName, DateTime startDate,
       DateTime startTime, DateTime endTime) async {
@@ -182,5 +181,20 @@ class GoogleCalendarService {
     } catch (e) {
       print("Error creating event: $e");
     }
+  }
+
+  Future<String?> getProfileImage() async {
+    bool signedIn = await _googleAuthService.signInWithGoogle();
+    if (signedIn) {
+      String? profileImageUrl = _googleAuthService.getProfileImage();
+      if (profileImageUrl != null) {
+        return profileImageUrl;
+      } else {
+        print("Profile Image not found");
+      }
+    } else {
+      print("Sign_In failed");
+    }
+    return "null";
   }
 }
